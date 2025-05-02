@@ -8,6 +8,7 @@ urlpatterns = [
     
     path('api-auth/', include('rest_framework.urls')),
     path('accounts/', include('users.urls')),
+    path('social_accounts/', include('social_accounts.urls')),
     
     # swagger urls
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
