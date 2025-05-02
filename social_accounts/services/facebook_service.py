@@ -8,6 +8,11 @@ class FacebookService(SocialAccountService):
     CLIENT_ID = settings.FACEBOOK_CLIENT_ID
     CLIENT_SECRET = settings.FACEBOOK_CLIENT_SECRET
 
+    REQUIRED_PERMISSIONS = {
+        "public_profile",
+        "publish_video",
+    }
+
     @classmethod
     def refresh_access_token(self, refresh_token):
         return None, None, None
@@ -46,11 +51,6 @@ class FacebookService(SocialAccountService):
         Verify the permissions granted to the access token
         Returns tuple of (is_valid, missing_scopes)
         """
-        required_permissions = {
-            "public_profile",
-            "publish_video",
-        }
-
         response = requests.get(
             "https://graph.facebook.com/v18.0/me/permissions",
             params={"access_token": access_token},
@@ -68,7 +68,7 @@ class FacebookService(SocialAccountService):
         }
 
         # Find missing permissions
-        missing_permissions = required_permissions - granted_permissions
+        missing_permissions = cls.REQUIRED_PERMISSIONS - granted_permissions
 
         return (not bool(missing_permissions), missing_permissions)
 

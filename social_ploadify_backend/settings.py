@@ -35,11 +35,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Custom user app
-    'users', 
+    'users',
     'social_accounts',
-    
+
     # Third-party apps
     'rest_framework',
     "corsheaders",
@@ -61,7 +61,7 @@ MIDDLEWARE = [
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", 
+    "http://localhost:5173",
     "http://127.0.0.1:8080",
 ]
 
@@ -148,3 +148,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# SOCIAL AUTHENTICATION SETTINGS
+GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = env('GOOGLE_CLIENT_SECRET')
+
+FACEBOOK_CLIENT_ID = env('FACEBOOK_CLIENT_ID')
+FACEBOOK_CLIENT_SECRET = env('FACEBOOK_CLIENT_SECRET')
+
+# Ensure the Fernet key is 32 bytes long
+FERNET_SECRET_KEY = env('FERNET_SECRET_KEY').encode()
