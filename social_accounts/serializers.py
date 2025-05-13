@@ -23,6 +23,12 @@ class SocialAccountSerializer(serializers.ModelSerializer):
 class GoogleAuthCodeSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
     redirect_uri = serializers.URLField(required=True)
+    brand = serializers.PrimaryKeyRelatedField(
+        queryset=SocialAccount.objects.all(),
+    )
 
 class FacebookAuthCodeSerializer(serializers.Serializer):
     access_token = serializers.CharField(required=True)
+    brand = serializers.PrimaryKeyRelatedField(
+        queryset=SocialAccount.objects.all(),
+    )

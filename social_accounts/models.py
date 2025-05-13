@@ -8,6 +8,27 @@ from social_accounts.utils.encryption import decrypt_text, encrypt_text
 from social_ploadify_backend.models import UUIDTimestampedModel
 
 # Create your models here.
+class Brand(UUIDTimestampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='brands'
+    )
+    name = models.CharField(max_length=100)
+    is_default = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["user", "name"],
+                name="unique_user_brand_name",
+            ),
+            UniqueConstraint(
+                fields=["user", "is_default"],
+                name="unique_user_default_brand",
+            )
+        ]
+
 class SocialAccount(UUIDTimestampedModel):
     PROVIDER_CHOICES = [
         ("youtube", "YouTube"),
@@ -15,11 +36,7 @@ class SocialAccount(UUIDTimestampedModel):
         ("tiktok", "TikTok"),
         ("facebook", "Facebook"),
     ]
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="social_accounts",
-    )
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name='social_accounts')
     account_type = models.CharField(max_length=50, choices=PROVIDER_CHOICES)
 
     _access_token = models.TextField()

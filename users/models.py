@@ -12,16 +12,17 @@ class User(AbstractUser, UUIDModel):
         ("MALE", "Male"),
         ("FEMALE", "Female"),
     ]
-    
-    username = None 
+
+    username = None
     email = models.EmailField(unique=True)
+    handle = models.CharField(max_length=30, unique=True, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     objects = UserManager()
-    
-    
+
+
 class OnboardingData(UUIDTimestampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     how_found_us = models.CharField(max_length=255, blank=True, null=True)

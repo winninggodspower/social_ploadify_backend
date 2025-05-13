@@ -23,6 +23,16 @@ class YoutubeAuthConnectView(APIView):
         serializer = GoogleAuthCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # --- Brand ownership verification ---
+        brand = serializer.validated_data["brand"]
+        if brand.user != request.user:
+            return CustomErrorResponse(
+                {
+                    "message": "You do not have permission to access this brand.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         try:
             credentials, missing_scopes = YoutubeService.exchange_code_for_token(
                 auth_code=serializer.validated_data["code"],
@@ -48,6 +58,7 @@ class YoutubeAuthConnectView(APIView):
         social_account = SocialAccount.objects.update_or_create(
             user=request.user,
             account_type="youtube",
+            brand=brand,
             defaults={
                 "access_token": credentials.token,
                 "refresh_token": credentials.refresh_token,
@@ -76,6 +87,16 @@ class FacebookAuthConnectView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # --- Brand ownership verification ---
+        brand = serializer.validated_data["brand"]
+        if brand.user != request.user:
+            return CustomErrorResponse(
+                {
+                    "message": "You do not have permission to access this brand.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         try:
             long_lived_token, expires_in = FacebookService.exchange_short_lived_token(
                 serializer.validated_data["access_token"]
@@ -92,6 +113,7 @@ class FacebookAuthConnectView(APIView):
         social_account = SocialAccount.objects.get_or_create(
             user=request.user,
             account_type="facebook",
+            brand=brand,
             defaults={
                 "access_token": long_lived_token,
                 "expires_at": datetime.datetime.today()
