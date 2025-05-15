@@ -8,6 +8,6 @@ class SocialAccountService(ABC):
         """
         Refresh the access token using the refresh token.
         :param refresh_token: The refresh token to authenticate the request.
-        :return: A new access token.
+        :return: A new access token, refresh_token and expires_at.
         """
         raise NotImplementedError("Subclasses must implement this method.")

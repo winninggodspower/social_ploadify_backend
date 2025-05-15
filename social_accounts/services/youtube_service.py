@@ -67,7 +67,11 @@ class YoutubeService(SocialAccountService):
         request = Request()
         credentials.refresh(request)
 
-        return credentials.token, credentials.refresh_token, credentials.expiry
+        return {
+            "access_token": credentials.token,
+            "refresh_token": credentials.refresh_token,
+            "expires_in": credentials.expiry,
+        }
 
     @classmethod
     def get_youtube_client(cls, access_token):

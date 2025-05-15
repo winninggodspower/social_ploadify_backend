@@ -28,7 +28,21 @@ class GoogleAuthCodeSerializer(serializers.Serializer):
     )
 
 class FacebookAuthCodeSerializer(serializers.Serializer):
-    access_token = serializers.CharField(required=True)
+    short_lived_access_token = serializers.CharField(required=True)
+    brand = serializers.PrimaryKeyRelatedField(
+        queryset=SocialAccount.objects.all(),
+    )
+
+class InstagramAuthCodeSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True)
+    redirect_uri = serializers.URLField(required=True)
+    brand = serializers.PrimaryKeyRelatedField(
+        queryset=SocialAccount.objects.all(),
+    )
+
+class LinkedinAuthCodeSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True)
+    redirect_uri = serializers.URLField(required=True)
     brand = serializers.PrimaryKeyRelatedField(
         queryset=SocialAccount.objects.all(),
     )

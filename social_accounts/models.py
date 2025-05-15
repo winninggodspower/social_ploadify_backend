@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db.models import UniqueConstraint
 from django.utils import timezone
 
+from social_accounts.services.instagram_service import InstagramService
 from social_accounts.services.youtube_service import YoutubeService
 from social_accounts.utils.encryption import decrypt_text, encrypt_text
 from social_ploadify_backend.models import UUIDTimestampedModel
@@ -66,16 +67,12 @@ class SocialAccount(UUIDTimestampedModel):
         if self.is_token_expired():
             if self.account_type == "youtube":
                 try:
-                    (
-                        access_token,
-                        refresh_token,
-                        expires_at,
-                    ) = YoutubeService.refresh_access_token(
+                    response = YoutubeService.refresh_access_token(
                         self.refresh_token,
                     )
-                    self.access_token = access_token
-                    self.refresh_token = refresh_token
-                    self.expires_at = expires_at
+                    self.access_token = response["access_token"]
+                    self.refresh_token = response["refresh_token"]
+                    self.expires_at = response["expires_in"]
                     self.save()
                 except Exception:
                     return None
@@ -83,6 +80,17 @@ class SocialAccount(UUIDTimestampedModel):
             elif self.account_type == "facebook":
                 # Facebook does not support refresh tokens
                 return None
+
+            elif self.account_type == "instagram":
+                try:
+                    response = InstagramService.refresh_access_token(
+                        self.access_token
+                    )
+                    self.access_token = response["access_token"]
+                    self.expires_at = response["expires_in"]
+                    self.save()
+                except Exception:
+                    return None
 
         return self.access_token
 

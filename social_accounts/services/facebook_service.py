@@ -15,7 +15,8 @@ class FacebookService(SocialAccountService):
 
     @classmethod
     def refresh_access_token(self, refresh_token):
-        return None, None, None
+        # Facebook does not support refresh tokens in the same way as other platforms.
+        return None
 
     @classmethod
     def exchange_short_lived_token(cls, short_lived_token):
@@ -76,38 +77,3 @@ class FacebookService(SocialAccountService):
     def get_facebook_pages(cls, access_token):
         # returns list of users pages
         pass
-
-    @classmethod
-    def initialize_livestream(cls, access_token, title, description, status="LIVE_NOW"):
-        """
-        Initialize a Facebook livestream
-        Returns: Dictionary containing stream details and credentials
-        """
-        try:
-            response = requests.post(
-                "https://graph.facebook.com/v18.0/me/live_videos",
-                params={
-                    "access_token": access_token,
-                    "status": status,
-                    "title": title,
-                    "description": description,
-                },
-            )
-            data = response.json()
-
-            if "id" not in data:
-                raise ValueError(
-                    data.get("error", {}).get("message", "Failed to create livestream")
-                )
-
-            return {
-                "video_id": data.get("id"),
-                "title": title,
-                "description": description,
-                "stream_url": data.get("stream_url"),  # RTMP URL
-                "secure_stream_url": data.get("secure_stream_url"),  # RTMPS URL
-                "status": status,
-            }
-
-        except requests.RequestException as e:
-            raise ValueError(f"Failed to initialize Facebook livestream: {str(e)}")
