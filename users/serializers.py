@@ -16,3 +16,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+class GoogleAuthSerializer(serializers.Serializer):
+    auth_code = serializers.CharField(required=True)
+    redirect_uri = serializers.URLField(required=True)

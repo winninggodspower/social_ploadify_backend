@@ -2,12 +2,12 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from .serializers import RegisterUserSerializer
+
+from social_accounts.google_auth_helper import GoogleAuthHelper
+from .serializers import GoogleAuthSerializer, RegisterUserSerializer
 
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from google.oauth2 import id_token
-from google.auth.transport import requests
 
 User = get_user_model()
 
@@ -16,18 +16,22 @@ class RegisterUserView(generics.CreateAPIView):
     serializer_class = RegisterUserSerializer
 
 class GoogleLoginView(APIView):
-    def post(self, request):
-        token = request.data.get("id_token")
+    serializer_class = GoogleAuthSerializer
 
-        if not token:
-            return Response({'detail': 'ID token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = self.serializer_class(request.data)
+        serializer.is_valid(raise_exception=True)
 
         try:
-            # Verify the token with Google
-            idinfo = id_token.verify_oauth2_token(token, requests.Request())
-            email = idinfo['email']
-            first_name = idinfo.get('given_name', '')
-            last_name = idinfo.get('family_name', '')
+
+            google_helper = GoogleAuthHelper(
+                redirect_uri=serializer.validated_data['redirect_uri']
+            )
+
+            user_info = google_helper.verify_and_get_user_info(serializer.validated_data['auth_code'])
+            email = user_info['email']
+            first_name = user_info['first_name']
+            last_name = user_info['last_name']
 
             # Get or create user
             user, created = User.objects.get_or_create(email=email, defaults={
@@ -42,5 +46,10 @@ class GoogleLoginView(APIView):
                 'access': str(refresh.access_token),
             })
 
-        except ValueError:
-            return Response({'detail': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            # Catch any other unexpected errors
+            print(f"Authentication error: {e}") # Log the full exception for debugging
+            return Response({'detail': 'An unexpected error occurred during authentication.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
