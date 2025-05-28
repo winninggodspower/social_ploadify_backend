@@ -8,3 +8,9 @@ https://www.instagram.com/oauth/authorize
 &scope=instagram_business_basic%2Cinstagram_business_content_publish%2Cinstagram_business_manage_insights
 &enable_fb_login=0
 &force_authentication=1
+
+## Start celery
+celery -A social_ploadify_backend worker -l info
+
+## Celery beat
+celery -A social_ploadify_backend beat -l  info --scheduler django_celery_beat.schedulers:DatabaseScheduler

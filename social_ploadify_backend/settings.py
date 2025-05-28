@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "corsheaders",
     'querycount',
     'drf_yasg',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -163,8 +165,21 @@ INSTAGRAM_APP_SECRET = env('INSTAGRAM_APP_SECRET')
 TIKTOK_CLIENT_KEY = env('TIKTOK_CLIENT_KEY')
 TIKTOK_CLIENT_SECRET = env('TIKTOK_CLIENT_SECRET')
 
-LINKED_CLIENT_ID = env('LINKEDIN_CLIENT_ID')
-LINKED_CLIENT_SECRET = env('LINKEDIN_CLIENT_SECRET')
+LINKEDIN_CLIENT_ID = env('LINKEDIN_CLIENT_ID')
+LINKEDIN_CLIENT_SECRET = env('LINKEDIN_CLIENT_SECRET')
 
 # Ensure the Fernet key is 32 bytes long
 FERNET_SECRET_KEY = env('FERNET_SECRET_KEY').encode()
+
+
+# Celery Settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+
+CELERY_BEAT_SCHEDULE = {
+    "refresh_social_tokens": {
+        "task": "social_accounts.tasks.refresh_expiring_tokens",
+        "schedule": 1800,  # 30 minutes in seconds
+    },
+}

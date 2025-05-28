@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -121,8 +121,8 @@ class FacebookAuthConnectView(APIView):
             brand=brand,
             defaults={
                 "access_token": long_lived_token,
-                "expires_at": datetime.datetime.today()
-                + datetime.timedelta(seconds=expires_in),
+                "expires_at": timezone.now()
+                + timedelta(seconds=expires_in),
             },
         )
 
@@ -181,8 +181,8 @@ class InstagramAuthConnectView(APIView):
             brand=brand,
             defaults={
                 "access_token": credentials["access_token"],
-                "expires_at": datetime.datetime.today()
-                + datetime.timedelta(seconds=credentials["expires_in"]),
+                "expires_at": timezone.now()
+                + timedelta(seconds=credentials["expires_in"]),
             },
         )
 

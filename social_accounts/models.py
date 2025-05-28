@@ -1,7 +1,9 @@
+from datetime import timedelta
 from django.db import models
 from django.conf import settings
 from django.db.models import UniqueConstraint
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from social_accounts.services.instagram_service import InstagramService
 from social_accounts.services.youtube_service import YoutubeService
@@ -50,49 +52,10 @@ class SocialAccount(UUIDTimestampedModel):
     class Meta:
         constraints = [
             UniqueConstraint(
-                fields=["user", "account_type"],
-                name="unique_user_social_account",
+                fields=["brand", "account_type"],
+                name="unique_brand_social_account",
             )
         ]
-
-    def is_token_expired(self):
-        return self.expires_at and self.expires_at <= timezone.now()
-
-    def get_access_token(self):
-        """
-        This method returns None if token is expired and unable to refresh the token
-        therefore you should shseck if .get_access_token() is valid before proceeding to use the access token
-        peace 👌
-        """
-        if self.is_token_expired():
-            if self.account_type == "youtube":
-                try:
-                    response = YoutubeService.refresh_access_token(
-                        self.refresh_token,
-                    )
-                    self.access_token = response["access_token"]
-                    self.refresh_token = response["refresh_token"]
-                    self.expires_at = response["expires_in"]
-                    self.save()
-                except Exception:
-                    return None
-
-            elif self.account_type == "facebook":
-                # Facebook does not support refresh tokens
-                return None
-
-            elif self.account_type == "instagram":
-                try:
-                    response = InstagramService.refresh_access_token(
-                        self.access_token
-                    )
-                    self.access_token = response["access_token"]
-                    self.expires_at = response["expires_in"]
-                    self.save()
-                except Exception:
-                    return None
-
-        return self.access_token
 
     @property
     def access_token(self):
@@ -115,6 +78,48 @@ class SocialAccount(UUIDTimestampedModel):
     @property
     def scopes_list(self):
         return self.scope.split() if self.scope else []
+
+    def is_token_expired(self):
+        return self.expires_at and self.expires_at <= timezone.now()
+
+    def get_access_token(self):
+        """
+        This method returns None if token is expired and unable to refresh the token
+        therefore you should shseck if .get_access_token() is valid before proceeding to use the access token
+        peace 👌
+        """
+        if self.is_token_expired():
+            if not self.refresh_access_token():
+                return None
+
+        return self.access_token
+
+    def refresh_access_token(self):
+        """
+        Refreshes the access token if it is expired or about to expire.
+        Returns the new access token or None if refresh fails.
+        """
+        try:
+            if self.account_type == "youtube":
+                response = YoutubeService.refresh_access_token(self.refresh_token)
+                self.access_token = response["access_token"]
+                self.refresh_token = response["refresh_token"]
+                self.expires_at = response["expires_in"]
+                self.save()
+                return True
+
+            elif self.account_type == "instagram":
+                response = InstagramService.refresh_access_token(self.access_token)
+                self.access_token = response["access_token"]
+                self.expires_at = timezone.now() + timedelta(seconds=response["expires_in"])
+                self.save()
+                return True
+
+            # Facebook and others without refresh logic
+            return False
+
+        except Exception:
+            return False
 
     def __str__(self):
         return f"{self.user.email} - {self.account_type}"
